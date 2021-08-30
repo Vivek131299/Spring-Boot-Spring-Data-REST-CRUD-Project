@@ -1,6 +1,6 @@
 package com.luv2code.springboot.cruddemo.service;
 
-import com.luv2code.springboot.cruddemo.dao.EmployeeDAO;
+import com.luv2code.springboot.cruddemo.dao.EmployeeRepository;
 import com.luv2code.springboot.cruddemo.entity.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,49 +8,56 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
-    private EmployeeDAO employeeDAO;
+    private EmployeeRepository employeeRepository;
 
     // Constructor Injection of our DAO
     @Autowired
-    public EmployeeServiceImpl(@Qualifier("employeeDAOJpaImpl") EmployeeDAO theEmployeeDAO) {
-    // Here, @Qualifier ANNOTATION, since we are using JPA API instead of Hibernate in this project,
-    // and we hav both DAO implementations (for JPA and Hibernate as well), So the parameter above (EmployeeDAO)
-    // doesn't know which API DAO Impl to use.
-    // So, we are giving @Qualifier("employeeDAOJpaImpl") to tell that we want to use this Bean id (employeeDAOJpaImpl).
-    // So now, it will use JPA Impl (employeeDAOJpaImpl is a Bean id for EmployeeDAOJpaImpl) without any error.
+    public EmployeeServiceImpl(EmployeeRepository theEmployeeRepository) {
 
-        employeeDAO = theEmployeeDAO;
+        employeeRepository = theEmployeeRepository;
     }
 
+    // No need to write @Transactional Annotation since we are using Spring Data JPA Repository,
+    // it provides this functionality.
+
     @Override
-    @Transactional
     public List<Employee> findAll() {
         // delegate the call to DAO
-        return employeeDAO.findAll();
+        return employeeRepository.findAll();
     }
 
-    @Transactional
     @Override
     public Employee findById(int theId) {
-        // delegate the call to DAO
-        return employeeDAO.findById(theId);
+
+        Optional<Employee> result = employeeRepository.findById(theId);
+        // Here, Optional is a different pattern, so instead of manually checking for null, we use Optional
+        // to see if given value is present. JPA Repository uses Optional.
+        // So, we can check if the value is present or not by isPresent() method.
+        Employee theEmployee = null;
+        if (result.isPresent()) {
+            theEmployee = result.get();
+        } else {
+            // we didn't find the employee
+            throw new RuntimeException("Did not find employee id - " + theId);
+        }
+        return theEmployee;
     }
 
-    @Transactional
+
     @Override
     public void save(Employee theEmployee) {
         // delegate the call to DAO
-        employeeDAO.save(theEmployee);
+        employeeRepository.save(theEmployee);
     }
 
-    @Transactional
     @Override
     public void deleteById(int theId) {
         // delegate the call to DAO
-        employeeDAO.deleteById(theId);
+        employeeRepository.deleteById(theId);
     }
 }
