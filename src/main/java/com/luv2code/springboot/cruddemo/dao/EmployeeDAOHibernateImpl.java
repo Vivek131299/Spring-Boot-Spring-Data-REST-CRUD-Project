@@ -25,7 +25,6 @@ public class EmployeeDAOHibernateImpl implements EmployeeDAO {
     }
 
     @Override
-    @Transactional // Handles transaction management, so we don't have to manually start and commit transaction.
     public List<Employee> findAll() {
 
         // get the current hibernate session
@@ -40,5 +39,43 @@ public class EmployeeDAOHibernateImpl implements EmployeeDAO {
 
         // return the results
         return employees;
+    }
+
+    @Override
+    public Employee findById(int theId) {
+
+        // get the current hibernate session
+        Session currentSession = entityManager.unwrap(Session.class);
+
+        // get the employee
+        Employee theEmployee = currentSession.get(Employee.class, theId);
+
+        // return the employee
+        return theEmployee;
+    }
+
+    @Override
+    public void save(Employee theEmployee) {
+
+        // get the current hibernate session
+        Session currentSession = entityManager.unwrap(Session.class);
+
+        // save employee
+        currentSession.saveOrUpdate(theEmployee);
+        // saveOrUpdate() - If the id=0 then it will save/insert OR else it will update according to given id.
+    }
+
+    @Override
+    public void deleteById(int theId) {
+
+        // get the current hibernate session
+        Session currentSession = entityManager.unwrap(Session.class);
+
+        // delete the object wih primary key
+        Query theQuery = currentSession.createQuery("delete from Employee where id=:employeeId");
+        theQuery.setParameter("employeeId", theId);
+
+        // execute the query
+        theQuery.executeUpdate();
     }
 }
